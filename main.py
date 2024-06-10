@@ -85,6 +85,7 @@ def main():
     high = st.number_input("High")
     low = st.number_input("Low")
     Advances = st.number_input("ADVANCES")
+    Declines = st.number_input("DECLINES")
     india_vix_open = st.number_input("INDIAVIX Open")
     india_vix_high = st.number_input("INDIAVIX High")
     india_vix_low = st.number_input("INDIAVIX Low")
