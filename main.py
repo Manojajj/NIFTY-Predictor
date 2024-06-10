@@ -15,8 +15,8 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Date', 'Open Points', 'Open', 'High', 'Low', 'Close', 'ADVANCES', 'DECLINES', 
-                 'ADVANCE / DECLINE RATIO', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
+    data = data[['Date', 'Open', 'High', 'Low', 'Close', 'ADVANCES', 'DECLINES', 
+                 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
     # Extract Day and Month from Date column
     data['Day'] = data['Date'].dt.dayofweek  # 0: Monday, 1: Tuesday, ..., 6: Sunday
     data['Month'] = data['Date'].dt.month
@@ -44,7 +44,7 @@ def main():
         return
 
     # Define feature columns and target columns
-    feature_cols = ['Open Points', 'Open', 'High', 'Low',  'ADVANCE / DECLINE RATIO', 'INDIAVIX Open', 
+    feature_cols = ['Open', 'High', 'Low',  'ADVANCES', 'DECLINES', 'INDIAVIX Open', 
                     'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Day', 'Month']
     target_col = 'Close'
 
@@ -81,11 +81,10 @@ def main():
     # Make predictions for new data
     st.write("Make Predictions")
 
-    open_points = st.number_input("Open Points")
     open_price = st.number_input("Open")
     high = st.number_input("High")
     low = st.number_input("Low")
-    Advance_Decline_ratio = st.number_input("ADVANCE / DECLINE RATIO")
+    Advances = st.number_input("ADVANCES")
     india_vix_open = st.number_input("INDIAVIX Open")
     india_vix_high = st.number_input("INDIAVIX High")
     india_vix_low = st.number_input("INDIAVIX Low")
@@ -95,11 +94,11 @@ def main():
                                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
 
     input_data = pd.DataFrame({
-        'Open Points': [open_points],
         'Open': [open_price],
         'High': [high],
         'Low': [low],
-        'ADVANCE / DECLINE RATIO': [Advance_Decline_ratio],
+        'ADVANCES': [Advances],
+        'DECLINES': [Declines],
         'INDIAVIX Open': [india_vix_open],
         'INDIAVIX High': [india_vix_high],
         'INDIAVIX Low': [india_vix_low],
