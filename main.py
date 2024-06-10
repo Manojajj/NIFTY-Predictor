@@ -64,7 +64,7 @@ def main():
         'Open Points': [open_points],
         'Open': [open_price],
         'ADVANCE / DECLINE RATIO': [adv_dec_ratio],
-        'INDIA VIX Close': [india_vix_close]
+        'INDIAVIX Close': [india_vix_close]
     })
 
     if st.button("Predict"):
