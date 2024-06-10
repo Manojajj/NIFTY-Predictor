@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 # Load data
 @st.cache_data
@@ -20,6 +18,13 @@ def preprocess_data(data):
     # Extract Day and Month from Date column
     data['Day'] = data['Date'].dt.dayofweek  # 0: Monday, 1: Tuesday, ..., 6: Sunday
     data['Month'] = data['Date'].dt.month
+    
+    # Apply StandardScaler to numerical features
+    scaler = StandardScaler()
+    numerical_features = ['Open', 'High', 'Low', 'ADVANCES', 'DECLINES', 
+                          'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']
+    data[numerical_features] = scaler.fit_transform(data[numerical_features])
+    
     return data
 
 def build_model():
@@ -53,27 +58,10 @@ def main():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Define preprocessing steps for categorical features
-    categorical_features = ['Day', 'Month']
-    categorical_transformer = Pipeline(steps=[
-        ('onehot', OneHotEncoder(handle_unknown='ignore'))
-    ])
-
-    # Combine preprocessing steps for all features
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('cat', categorical_transformer, categorical_features)
-        ])
-
-    # Append classifier to preprocessing pipeline
-    # Now we have a full prediction pipeline
-    model = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('regressor', LinearRegression())
-    ])
-
     # Model training
+    model = build_model()
     model.fit(X_train, y_train)
+    
     # Model evaluation
     mse = evaluate_model(model, X_test, y_test)
     st.write(f"Mean Squared Error for Close Price Prediction: {mse}")
