@@ -5,32 +5,14 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
 # Load data
-@st.cache
+@st.cache_data
 def load_data():
     data = pd.read_excel("NIFTY50_JAN2021_APR2024.xlsx")
     return data
 
 def preprocess_data(data):
-    # Convert 'Date' column to datetime
-    data['Date'] = pd.to_datetime(data['Date'])
-
-    # Add extra columns for day and month
-    data['Day'] = data['Date'].dt.day_name().str[:3]  # Get first three characters for day abbreviation
-    data['Month'] = data['Date'].dt.month_name().str[:3]  # Get first three characters for month abbreviation
-
-    # Drop 'Date' column as it's no longer needed
-    data = data.drop(columns=['Date'])
-
-    # Convert all columns to numeric, forcing non-numeric to NaN
-    cols_to_convert = ['Open', 'High', 'Low', 'Close', 'ADVANCES', 'DECLINES', 'ADVANCE / DECLINE RATIO', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Prev. Close', 'Change', '% Change']
-    data[cols_to_convert] = data[cols_to_convert].apply(pd.to_numeric, errors='coerce')
-
-    # Drop rows with NaN values
-    data = data.dropna()
-
-    # One-hot encode categorical variables
-    data = pd.get_dummies(data, columns=['Day', 'Month'], drop_first=True)
-
+    # Drop any non-numeric columns or handle them appropriately
+    data = data.select_dtypes(include=[float, int])
     return data
 
 def build_model(X_train, y_train):
@@ -44,78 +26,57 @@ def evaluate_model(model, X_test, y_test):
     return mse
 
 def main():
-    st.title('NIFTY Prediction App')
+    st.title("NIFTY 50 Predictor")
 
-    # Load data
     data = load_data()
-
+    
     # Preprocess data
     data = preprocess_data(data)
+    
+    if data.empty:
+        st.error("The dataset is empty after preprocessing.")
+        return
 
-    # Split data into features and targets
-    X = data.drop(columns=['Close', 'Open Points'])
-    y_close = data['Close']
-    y_open_points = data['Open Points']
+    # Define feature columns and target columns
+    feature_cols = data.columns.drop(['Close', 'Open'])  # Adjust according to your dataset
+    target_col_close = 'Close'
+    target_col_open = 'Open'
 
-    # Train-test split
+    X = data[feature_cols]
+    y_close = data[target_col_close]
+    y_open = data[target_col_open]
+
     X_train, X_test, y_train_close, y_test_close = train_test_split(X, y_close, test_size=0.2, random_state=42)
-    _, _, y_train_open_points, y_test_open_points = train_test_split(X, y_open_points, test_size=0.2, random_state=42)
+    _, _, y_train_open_points, y_test_open_points = train_test_split(X, y_open, test_size=0.2, random_state=42)
 
     # Model training for Close price prediction
     model_close = build_model(X_train, y_train_close)
-
     # Model evaluation for Close price prediction
     mse_close = evaluate_model(model_close, X_test, y_test_close)
+    st.write(f"Mean Squared Error for Close Price Prediction: {mse_close}")
 
-    # Model training for Open Points prediction
-    model_open_points = build_model(X_train, y_train_open_points)
+    # Model training for Open points prediction
+    model_open = build_model(X_train, y_train_open_points)
+    # Model evaluation for Open points prediction
+    mse_open = evaluate_model(model_open, X_test, y_test_open_points)
+    st.write(f"Mean Squared Error for Open Points Prediction: {mse_open}")
 
-    # Model evaluation for Open Points prediction
-    mse_open_points = evaluate_model(model_open_points, X_test, y_test_open_points)
-
-    st.write('Close Price Prediction - Mean Squared Error:', mse_close)
-    st.write('Open Points Prediction - Mean Squared Error:', mse_open_points)
-
-    # Form for user input
-    st.sidebar.title('Select Prediction')
-    prediction_type = st.sidebar.radio("Choose prediction type", ('Close Price', 'Open Points'))
-
-    if prediction_type == 'Close Price':
-        st.sidebar.write('You selected Close Price Prediction')
-        features = {
-            'Open': st.sidebar.number_input('Open', min_value=0.0),
-            'ADVANCE / DECLINE RATIO': st.sidebar.number_input('Advance/Decline Ratio', min_value=0.0),
-            'INDIAVIX Open': st.sidebar.number_input('INDIAVIX Open', min_value=0.0),
-            'INDIAVIX Close': st.sidebar.number_input('INDIAVIX Close', min_value=0.0)
-        }
-        features_df = pd.DataFrame([features])
-
-        # Add dummy columns for missing categorical variables
-        for col in X.columns:
-            if col not in features_df.columns:
-                features_df[col] = 0
-
-        prediction = model_close.predict(features_df)
-        st.write('Close Price Prediction:', prediction)
-
-    elif prediction_type == 'Open Points':
-        st.sidebar.write('You selected Open Points Prediction')
-        features = {
-            'Open': st.sidebar.number_input('Open', min_value=0.0),
-            'ADVANCE / DECLINE RATIO': st.sidebar.number_input('Advance/Decline Ratio', min_value=0.0),
-            'Close': st.sidebar.number_input('Close', min_value=0.0),
-            'INDIAVIX Open': st.sidebar.number_input('INDIAVIX Open', min_value=0.0),
-            'INDIAVIX Close': st.sidebar.number_input('INDIAVIX Close', min_value=0.0)
-        }
-        features_df = pd.DataFrame([features])
-
-        # Add dummy columns for missing categorical variables
-        for col in X.columns:
-            if col not in features_df.columns:
-                features_df[col] = 0
-
-        prediction = model_open_points.predict(features_df)
-        st.write('Open Points Prediction:', prediction)
+    # Make predictions for new data
+    st.write("Make Predictions")
+    new_data = st.text_area("Enter new data in CSV format", value="")  # Enter new data as CSV format
+    if st.button("Predict"):
+        if new_data:
+            new_data_df = pd.read_csv(pd.compat.StringIO(new_data))
+            new_data_df = preprocess_data(new_data_df)
+            if not new_data_df.empty:
+                prediction_close = model_close.predict(new_data_df)
+                prediction_open = model_open.predict(new_data_df)
+                st.write('Close Price Prediction:', prediction_close)
+                st.write('Open Points Prediction:', prediction_open)
+            else:
+                st.error("The input data is invalid after preprocessing.")
+        else:
+            st.error("No data entered.")
 
 if __name__ == "__main__":
     main()
