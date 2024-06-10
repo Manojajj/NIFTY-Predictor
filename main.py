@@ -15,8 +15,7 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Date', 'Open', 'High', 'Low', 'Close', 'ADVANCES', 'DECLINES', 
-                 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
+    data = data[['Date', 'Open', 'High', 'Low', 'Close', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
     # Extract Expiry Day from Date column
     data['Expiry Day'] = data['Date'].dt.dayofweek == 3  # 3 corresponds to Thursday
     data['Expiry Day'] = data['Expiry Day'].astype(int)  # Convert boolean to integer (1 or 0)
@@ -45,8 +44,7 @@ def main():
         return
 
     # Define feature columns and target columns
-    feature_cols = ['Open', 'High', 'Low',  'ADVANCES', 'DECLINES', 'INDIAVIX Open', 
-                    'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Expiry Day']
+    feature_cols = ['Open', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Expiry Day']
     target_col = 'Close'
 
     X = data[feature_cols]
@@ -81,8 +79,6 @@ def main():
     open_price = st.number_input("Open")
     high = st.number_input("High")
     low = st.number_input("Low")
-    Advances = st.number_input("ADVANCES")
-    Declines = st.number_input("DECLINES")
     india_vix_open = st.number_input("INDIAVIX Open")
     india_vix_high = st.number_input("INDIAVIX High")
     india_vix_low = st.number_input("INDIAVIX Low")
@@ -98,8 +94,6 @@ def main():
         'Open': [open_price],
         'High': [high],
         'Low': [low],
-        'ADVANCES': [Advances],
-        'DECLINES': [Declines],
         'INDIAVIX Open': [india_vix_open],
         'INDIAVIX High': [india_vix_high],
         'INDIAVIX Low': [india_vix_low],
