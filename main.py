@@ -3,6 +3,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 
 # Load data
 @st.cache_data
@@ -15,13 +18,12 @@ def preprocess_data(data):
     data = data[['Date', 'Open Points', 'Open', 'High', 'Low', 'Close', 'ADVANCES', 'DECLINES', 
                  'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
     # Extract Day and Month from Date column
-    data['Day'] = data['Date'].dt.strftime('%a')  # Abbreviated day name (Mon, Tue, ...)
-    data['Month'] = data['Date'].dt.strftime('%b')  # Abbreviated month name (Jan, Feb, ...)
+    data['Day'] = data['Date'].dt.dayofweek  # 0: Monday, 1: Tuesday, ..., 6: Sunday
+    data['Month'] = data['Date'].dt.month
     return data
 
-def build_model(X_train, y_train):
+def build_model():
     model = RandomForestRegressor()
-    model.fit(X_train, y_train)
     return model
 
 def evaluate_model(model, X_test, y_test):
@@ -51,8 +53,27 @@ def main():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+    # Define preprocessing steps for categorical features
+    categorical_features = ['Day', 'Month']
+    categorical_transformer = Pipeline(steps=[
+        ('onehot', OneHotEncoder(handle_unknown='ignore'))
+    ])
+
+    # Combine preprocessing steps for all features
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('cat', categorical_transformer, categorical_features)
+        ])
+
+    # Append classifier to preprocessing pipeline
+    # Now we have a full prediction pipeline
+    model = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('regressor', RandomForestRegressor())
+    ])
+
     # Model training
-    model = build_model(X_train, y_train)
+    model.fit(X_train, y_train)
     # Model evaluation
     mse = evaluate_model(model, X_test, y_test)
     st.write(f"Mean Squared Error for Close Price Prediction: {mse}")
@@ -81,8 +102,8 @@ def main():
         'INDIAVIX High': [india_vix_high],
         'INDIAVIX Low': [india_vix_low],
         'INDIAVIX Close': [india_vix_close],
-        'Day': [day],
-        'Month': [month]
+        'Day': [['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].index(day)],
+        'Month': [['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].index(month)]
     })
 
     if st.button("Predict"):
