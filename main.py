@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.decomposition import PCA
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
@@ -16,7 +15,7 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Date', 'Open', 'High', 'Low', 'Close', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
+    data = data[['Date', 'Open', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
     # Extract Expiry Day from Date column
     data['Expiry Day'] = data['Date'].dt.dayofweek == 3  # 3 corresponds to Thursday
     data['Expiry Day'] = data['Expiry Day'].astype(int)  # Convert boolean to integer (1 or 0)
@@ -63,10 +62,9 @@ def main():
             ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
         ])
 
-    # Append PCA and RandomForestRegressor to preprocessing pipeline
+    # Append RandomForestRegressor to preprocessing pipeline
     model = Pipeline(steps=[
         ('preprocessor', preprocessor),
-        ('pca', PCA(n_components=0.95)),
         ('regressor', RandomForestRegressor())
     ])
 
