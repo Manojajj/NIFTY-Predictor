@@ -12,7 +12,11 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIAVIX Close', 'Close']].dropna()
+    data = data[['Date', 'Open Points', 'Open', 'High', 'Low', 'Close', 'ADVANCES', 'DECLINES', 
+                 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
+    # Extract Day and Month from Date column
+    data['Day'] = data['Date'].dt.strftime('%a')  # Abbreviated day name (Mon, Tue, ...)
+    data['Month'] = data['Date'].dt.strftime('%b')  # Abbreviated month name (Jan, Feb, ...)
     return data
 
 def build_model(X_train, y_train):
@@ -38,7 +42,8 @@ def main():
         return
 
     # Define feature columns and target columns
-    feature_cols = ['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIAVIX Close']
+    feature_cols = ['Open Points', 'Open', 'High', 'Low', 'INDIAVIX Open', 
+                    'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Day', 'Month']
     target_col = 'Close'
 
     X = data[feature_cols]
@@ -55,16 +60,29 @@ def main():
     # Make predictions for new data
     st.write("Make Predictions")
 
-    open_points = st.number_input("Open Points (Open Price - Prev. Close)", value=float(data['Open Points'].mean()))
-    open_price = st.number_input("Open", value=float(data['Open'].mean()))
-    adv_dec_ratio = st.number_input("Advance / Decline Ratio", value=float(data['ADVANCE / DECLINE RATIO'].mean()))
-    india_vix_close = st.number_input("INDIA VIX", value=float(data['INDIAVIX Close'].mean()))
+    open_points = st.number_input("Open Points")
+    open_price = st.number_input("Open")
+    high = st.number_input("High")
+    low = st.number_input("Low")
+    india_vix_open = st.number_input("INDIAVIX Open")
+    india_vix_high = st.number_input("INDIAVIX High")
+    india_vix_low = st.number_input("INDIAVIX Low")
+    india_vix_close = st.number_input("INDIAVIX Close")
+    day = st.selectbox("Day", ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+    month = st.selectbox("Month", ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
 
     input_data = pd.DataFrame({
         'Open Points': [open_points],
         'Open': [open_price],
-        'ADVANCE / DECLINE RATIO': [adv_dec_ratio],
-        'INDIAVIX Close': [india_vix_close]
+        'High': [high],
+        'Low': [low],
+        'INDIAVIX Open': [india_vix_open],
+        'INDIAVIX High': [india_vix_high],
+        'INDIAVIX Low': [india_vix_low],
+        'INDIAVIX Close': [india_vix_close],
+        'Day': [day],
+        'Month': [month]
     })
 
     if st.button("Predict"):
