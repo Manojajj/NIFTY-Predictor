@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
@@ -50,15 +50,17 @@ def main():
     X = data[feature_cols]
     y = data[target_col]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)
 
-    # Define preprocessing steps for categorical features
+    # Define preprocessing steps for categorical features and numerical features
+    numeric_features = ['Open', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']
+    categorical_features = ['Expiry Day']
+    
     preprocessor = ColumnTransformer(
         transformers=[
-            ('onehot', OneHotEncoder(handle_unknown='ignore'), ['Expiry Day'])
-        ],
-        remainder='passthrough'
-    )
+            ('num', StandardScaler(), numeric_features),
+            ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
+        ])
 
     # Append classifier to preprocessing pipeline
     # Now we have a full prediction pipeline
