@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
 # Load data
-@st.cache_data
+@st.cache
 def load_data():
     data = pd.read_excel("NIFTY50_JAN2021_APR2024.xlsx")
     return data
