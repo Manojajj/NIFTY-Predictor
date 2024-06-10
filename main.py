@@ -55,7 +55,7 @@ def main():
     # Make predictions for new data
     st.write("Make Predictions")
 
-    open_points = st.number_input("Open Points (Open Price - Prev. Close", min_value=float(data['Open Points'].min()), max_value=float(data['Open Points'].max()), value=float(data['Open Points'].mean()))
+    open_points = st.number_input("Open Points (Open Price - Prev. Close)", min_value=float(data['Open Points'].min()), max_value=float(data['Open Points'].max()), value=float(data['Open Points'].mean()))
     open_price = st.number_input("Open Price", min_value=float(data['Open'].min()), max_value=float(data['Open'].max()), value=float(data['Open'].mean()))
     adv_dec_ratio = st.number_input("Advance / Decline Ratio", min_value=float(data['ADVANCE / DECLINE RATIO'].min()), max_value=float(data['ADVANCE / DECLINE RATIO'].max()), value=float(data['ADVANCE / DECLINE RATIO'].mean()))
     india_vix_close = st.number_input("INDIAVIX", min_value=float(data['INDIAVIX Close'].min()), max_value=float(data['INDIAVIX Close'].max()), value=float(data['INDIAVIX Close'].mean()))
