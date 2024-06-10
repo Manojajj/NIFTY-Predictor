@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
+from sklearn.neural_network import MLPRegressor
 
 # Load data
 @st.cache_data
@@ -15,7 +15,7 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Date', 'Open', 'Close', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
+    data = data[['Date', 'Open', 'High', 'Low', 'Close', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
     # Extract Expiry Day from Date column
     data['Expiry Day'] = data['Date'].dt.dayofweek == 3  # 3 corresponds to Thursday
     data['Expiry Day'] = data['Expiry Day'].astype(int)  # Convert boolean to integer (1 or 0)
@@ -23,7 +23,7 @@ def preprocess_data(data):
     return data
 
 def build_model():
-    model = RandomForestRegressor()
+    model = MLPRegressor(hidden_layer_sizes=(100, 100), activation='relu', solver='adam', max_iter=500)
     return model
 
 def evaluate_model(model, X_test, y_test):
@@ -62,10 +62,10 @@ def main():
             ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
         ])
 
-    # Append RandomForestRegressor to preprocessing pipeline
+    # Append MLPRegressor to preprocessing pipeline
     model = Pipeline(steps=[
         ('preprocessor', preprocessor),
-        ('regressor', RandomForestRegressor())
+        ('regressor', MLPRegressor(hidden_layer_sizes=(100, 100), activation='relu', solver='adam', max_iter=500))
     ])
 
     # Model training
