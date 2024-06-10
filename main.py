@@ -1,12 +1,9 @@
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
 from sklearn.neural_network import MLPRegressor
-from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_squared_error
 
 # Load data
 @st.cache_data
@@ -16,16 +13,21 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Date', 'Open', 'High', 'Low', 'Close', 
-                 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
-    # Extract Expiry Day from Date column
-    data['Expiry Day'] = data['Date'].dt.dayofweek == 3  # 3 corresponds to Thursday
-    data['Expiry Day'] = data['Expiry Day'].astype(int)  # Convert boolean to integer (1 or 0)
-    
+    data = data[['Open', 'High', 'Low', 'Close', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Date']]
+    data['Expiry'] = data['Date'].dt.dayofweek  # 0: Monday, 1: Tuesday, ..., 6: Sunday
+    data['Expiry'] = data['Expiry'].apply(lambda x: 1 if x == 3 else 0) # Thursday is considered as expiry day
+    data.drop(columns=['Date'], inplace=True)
     return data
 
 def build_model():
-    model = MLPRegressor(hidden_layer_sizes=(100, 100), activation='relu', solver='adam', max_iter=500)
+    model = MLPRegressor(hidden_layer_sizes=(100, 50, 25), activation='relu', solver='adam', 
+                         alpha=0.0001, batch_size='auto', learning_rate='constant', 
+                         learning_rate_init=0.001, max_iter=200, shuffle=True, 
+                         random_state=None, tol=0.0001, verbose=False, 
+                         warm_start=False, momentum=0.9, nesterovs_momentum=True, 
+                         early_stopping=False, validation_fraction=0.1, beta_1=0.9, 
+                         beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, 
+                         max_fun=15000)
     return model
 
 def evaluate_model(model, X_test, y_test):
@@ -46,35 +48,22 @@ def main():
         return
 
     # Define feature columns and target columns
-    feature_cols = ['Open', 'High', 'Low', 'INDIAVIX Open', 
-                    'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Expiry Day']
+    feature_cols = ['Open', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Expiry']
     target_col = 'Close'
 
     X = data[feature_cols]
     y = data[target_col]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Standardize features
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    # Define preprocessing steps for categorical features and numerical features
-    numeric_features = ['Open', 'High', 'Low', 'INDIAVIX Open', 
-                        'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']
-    categorical_features = ['Expiry Day']
-    
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('num', StandardScaler(), numeric_features),
-            ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
-        ])
-
-    # Append PCA and MLPRegressor to preprocessing pipeline
-    model = Pipeline(steps=[
-        ('preprocessor', preprocessor),
-        ('pca', PCA(n_components=0.95)),  # Keep 95% of variance
-        ('regressor', MLPRegressor(hidden_layer_sizes=(100, 100), activation='relu', solver='adam', max_iter=500))
-    ])
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
     # Model training
+    model = build_model()
     model.fit(X_train, y_train)
+
     # Model evaluation
     mse = evaluate_model(model, X_test, y_test)
     st.write(f"Mean Squared Error for Close Price Prediction: {mse}")
@@ -89,23 +78,11 @@ def main():
     india_vix_high = st.number_input("INDIAVIX High")
     india_vix_low = st.number_input("INDIAVIX Low")
     india_vix_close = st.number_input("INDIAVIX Close")
+    expiry_day = st.selectbox("Expiry Day", ['Yes', 'No'])
 
-    expiry_day = st.radio("Expiry Day", ['No', 'Yes'])
-    if expiry_day == 'Yes':
-        expiry_day = 1
-    else:
-        expiry_day = 0
+    expiry = 1 if expiry_day == 'Yes' else 0
 
-    input_data = pd.DataFrame({
-        'Open': [open_price],
-        'High': [high],
-        'Low': [low],
-        'INDIAVIX Open': [india_vix_open],
-        'INDIAVIX High': [india_vix_high],
-        'INDIAVIX Low': [india_vix_low],
-        'INDIAVIX Close': [india_vix_close],
-        'Expiry Day': [expiry_day]
-    })
+    input_data = scaler.transform([[open_price, high, low, india_vix_open, india_vix_high, india_vix_low, india_vix_close, expiry]])
 
     if st.button("Predict"):
         prediction = model.predict(input_data)
