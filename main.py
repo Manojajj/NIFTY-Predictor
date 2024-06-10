@@ -54,21 +54,22 @@ def main():
 
     # Make predictions for new data
     st.write("Make Predictions")
-    new_data = st.text_area("Enter new data in CSV format", value="")  # Enter new data as CSV format
+
+    open_points = st.number_input("Open Points", min_value=float(data['Open Points'].min()), max_value=float(data['Open Points'].max()), value=float(data['Open Points'].mean()))
+    open_price = st.number_input("Open", min_value=float(data['Open'].min()), max_value=float(data['Open'].max()), value=float(data['Open'].mean()))
+    adv_dec_ratio = st.number_input("Advance / Decline Ratio", min_value=float(data['ADVANCE / DECLINE RATIO'].min()), max_value=float(data['ADVANCE / DECLINE RATIO'].max()), value=float(data['ADVANCE / DECLINE RATIO'].mean()))
+    india_vix_close = st.number_input("INDIAVIX Close", min_value=float(data['INDIAVIX Close'].min()), max_value=float(data['INDIAVIX Close'].max()), value=float(data['INDIAVIX Close'].mean()))
+
+    input_data = pd.DataFrame({
+        'Open Points': [open_points],
+        'Open': [open_price],
+        'ADVANCE / DECLINE RATIO': [adv_dec_ratio],
+        'INDIAVIX Close': [india_vix_close]
+    })
+
     if st.button("Predict"):
-        if new_data:
-            try:
-                new_data_df = pd.read_csv(pd.compat.StringIO(new_data))
-                new_data_df = preprocess_data(new_data_df)
-                if not new_data_df.empty:
-                    prediction = model.predict(new_data_df[feature_cols])
-                    st.write('Close Price Prediction:', prediction)
-                else:
-                    st.error("The input data is invalid after preprocessing.")
-            except Exception as e:
-                st.error(f"Error processing input data: {e}")
-        else:
-            st.error("No data entered.")
+        prediction = model.predict(input_data)
+        st.write('Close Price Prediction:', prediction[0])
 
 if __name__ == "__main__":
     main()
