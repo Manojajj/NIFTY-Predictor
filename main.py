@@ -21,6 +21,13 @@ def preprocess_data(data):
     # Drop 'Date' column as it's no longer needed
     data = data.drop(columns=['Date'])
 
+    # Convert all columns to numeric, forcing non-numeric to NaN
+    cols_to_convert = ['Open', 'High', 'Low', 'Close', 'ADVANCES', 'DECLINES', 'ADVANCE / DECLINE RATIO', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Prev. Close', 'Change', '% Change']
+    data[cols_to_convert] = data[cols_to_convert].apply(pd.to_numeric, errors='coerce')
+
+    # Drop rows with NaN values
+    data = data.dropna()
+
     # One-hot encode categorical variables
     data = pd.get_dummies(data, columns=['Day', 'Month'], drop_first=True)
 
