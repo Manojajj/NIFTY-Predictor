@@ -6,6 +6,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.neural_network import MLPRegressor
+from sklearn.decomposition import PCA
 
 # Load data
 @st.cache_data
@@ -15,7 +16,8 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Date', 'Open', 'High', 'Low', 'Close', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
+    data = data[['Date', 'Open', 'High', 'Low', 'Close', 
+                 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
     # Extract Expiry Day from Date column
     data['Expiry Day'] = data['Date'].dt.dayofweek == 3  # 3 corresponds to Thursday
     data['Expiry Day'] = data['Expiry Day'].astype(int)  # Convert boolean to integer (1 or 0)
@@ -44,7 +46,8 @@ def main():
         return
 
     # Define feature columns and target columns
-    feature_cols = ['Open', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Expiry Day']
+    feature_cols = ['Open', 'High', 'Low', 'INDIAVIX Open', 
+                    'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close', 'Expiry Day']
     target_col = 'Close'
 
     X = data[feature_cols]
@@ -53,7 +56,8 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Define preprocessing steps for categorical features and numerical features
-    numeric_features = ['Open', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']
+    numeric_features = ['Open', 'High', 'Low', 'INDIAVIX Open', 
+                        'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']
     categorical_features = ['Expiry Day']
     
     preprocessor = ColumnTransformer(
@@ -62,9 +66,10 @@ def main():
             ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
         ])
 
-    # Append MLPRegressor to preprocessing pipeline
+    # Append PCA and MLPRegressor to preprocessing pipeline
     model = Pipeline(steps=[
         ('preprocessor', preprocessor),
+        ('pca', PCA(n_components=0.95)),  # Keep 95% of variance
         ('regressor', MLPRegressor(hidden_layer_sizes=(100, 100), activation='relu', solver='adam', max_iter=500))
     ])
 
