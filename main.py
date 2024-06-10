@@ -5,10 +5,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 
 # Load data
-@st.cache
+@st.cache_data
 def load_data():
-    # Load your historical data here
-    # Example: data = pd.read_excel("your_data.xlsx")
     data = pd.read_excel("NIFTY50_JAN2021_APR2024.xlsx")
     return data
 
@@ -20,7 +18,12 @@ def preprocess_data(data):
     data['Day'] = data['Date'].dt.day_name().str[:3]  # Get first three characters for day abbreviation
     data['Month'] = data['Date'].dt.month_name().str[:3]  # Get first three characters for month abbreviation
 
-    # Add preprocessing steps here if needed
+    # Drop 'Date' column as it's no longer needed
+    data = data.drop(columns=['Date'])
+
+    # One-hot encode categorical variables
+    data = pd.get_dummies(data, columns=['Day', 'Month'], drop_first=True)
+
     return data
 
 def build_model(X_train, y_train):
@@ -34,7 +37,7 @@ def evaluate_model(model, X_test, y_test):
     return mse
 
 def main():
-    st.title('Stock Market Prediction App')
+    st.title('NIFTY Prediction App')
 
     # Load data
     data = load_data()
@@ -78,7 +81,14 @@ def main():
             'INDIAVIX Open': st.sidebar.number_input('INDIAVIX Open', min_value=0.0),
             'INDIAVIX Close': st.sidebar.number_input('INDIAVIX Close', min_value=0.0)
         }
-        prediction = model_close.predict(pd.DataFrame([features]))
+        features_df = pd.DataFrame([features])
+
+        # Add dummy columns for missing categorical variables
+        for col in X.columns:
+            if col not in features_df.columns:
+                features_df[col] = 0
+
+        prediction = model_close.predict(features_df)
         st.write('Close Price Prediction:', prediction)
 
     elif prediction_type == 'Open Points':
@@ -90,7 +100,14 @@ def main():
             'INDIAVIX Open': st.sidebar.number_input('INDIAVIX Open', min_value=0.0),
             'INDIAVIX Close': st.sidebar.number_input('INDIAVIX Close', min_value=0.0)
         }
-        prediction = model_open_points.predict(pd.DataFrame([features]))
+        features_df = pd.DataFrame([features])
+
+        # Add dummy columns for missing categorical variables
+        for col in X.columns:
+            if col not in features_df.columns:
+                features_df[col] = 0
+
+        prediction = model_open_points.predict(features_df)
         st.write('Open Points Prediction:', prediction)
 
 if __name__ == "__main__":
