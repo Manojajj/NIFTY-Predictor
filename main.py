@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.decomposition import PCA
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
@@ -23,7 +24,7 @@ def preprocess_data(data):
     return data
 
 def build_model():
-    model = LinearRegression()
+    model = RandomForestRegressor()
     return model
 
 def evaluate_model(model, X_test, y_test):
@@ -50,7 +51,7 @@ def main():
     X = data[feature_cols]
     y = data[target_col]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Define preprocessing steps for categorical features and numerical features
     numeric_features = ['Open', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']
@@ -62,11 +63,11 @@ def main():
             ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
         ])
 
-    # Append classifier to preprocessing pipeline
-    # Now we have a full prediction pipeline
+    # Append PCA and RandomForestRegressor to preprocessing pipeline
     model = Pipeline(steps=[
         ('preprocessor', preprocessor),
-        ('regressor', LinearRegression())
+        ('pca', PCA(n_components=0.95)),
+        ('regressor', RandomForestRegressor())
     ])
 
     # Model training
