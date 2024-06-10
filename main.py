@@ -12,7 +12,7 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIA VIX Close', 'Close']].dropna()
+    data = data[['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIAVIX Close', 'Close']].dropna()
     return data
 
 def build_model(X_train, y_train):
@@ -38,7 +38,7 @@ def main():
         return
 
     # Define feature columns and target columns
-    feature_cols = ['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIA VIX Close']
+    feature_cols = ['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIAVIX Close']
     target_col = 'Close'
 
     X = data[feature_cols]
