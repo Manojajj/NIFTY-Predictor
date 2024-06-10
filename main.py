@@ -15,7 +15,7 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Date', 'Open', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
+    data = data[['Date', 'Open', 'Close', 'High', 'Low', 'INDIAVIX Open', 'INDIAVIX High', 'INDIAVIX Low', 'INDIAVIX Close']].dropna()
     # Extract Expiry Day from Date column
     data['Expiry Day'] = data['Date'].dt.dayofweek == 3  # 3 corresponds to Thursday
     data['Expiry Day'] = data['Expiry Day'].astype(int)  # Convert boolean to integer (1 or 0)
