@@ -12,7 +12,7 @@ def load_data():
 
 def preprocess_data(data):
     # Select the relevant columns and drop any rows with missing values
-    data = data[['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIAVIX Close', 'Close']].dropna()
+    data = data[['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIA VIX Close', 'Close']].dropna()
     return data
 
 def build_model(X_train, y_train):
@@ -38,7 +38,7 @@ def main():
         return
 
     # Define feature columns and target columns
-    feature_cols = ['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIAVIX Close']
+    feature_cols = ['Open Points', 'Open', 'ADVANCE / DECLINE RATIO', 'INDIA VIX Close']
     target_col = 'Close'
 
     X = data[feature_cols]
@@ -55,16 +55,16 @@ def main():
     # Make predictions for new data
     st.write("Make Predictions")
 
-    open_points = st.number_input("Open Points (Open Price - Prev. Close)", min_value=float(data['Open Points'].min()), max_value=float(data['Open Points'].max()), value=float(data['Open Points'].mean()))
-    open_price = st.number_input("Open Price", min_value=float(data['Open'].min()), max_value=float(data['Open'].max()), value=float(data['Open'].mean()))
-    adv_dec_ratio = st.number_input("Advance / Decline Ratio", min_value=float(data['ADVANCE / DECLINE RATIO'].min()), max_value=float(data['ADVANCE / DECLINE RATIO'].max()), value=float(data['ADVANCE / DECLINE RATIO'].mean()))
-    india_vix_close = st.number_input("INDIAVIX", min_value=float(data['INDIAVIX Close'].min()), max_value=float(data['INDIAVIX Close'].max()), value=float(data['INDIAVIX Close'].mean()))
+    open_points = st.number_input("Open Points (Open Price - Prev. Close)", value=float(data['Open Points'].mean()))
+    open_price = st.number_input("Open", value=float(data['Open'].mean()))
+    adv_dec_ratio = st.number_input("Advance / Decline Ratio", value=float(data['ADVANCE / DECLINE RATIO'].mean()))
+    india_vix_close = st.number_input("INDIA VIX", value=float(data['INDIAVIX Close'].mean()))
 
     input_data = pd.DataFrame({
         'Open Points': [open_points],
         'Open': [open_price],
         'ADVANCE / DECLINE RATIO': [adv_dec_ratio],
-        'INDIAVIX Close': [india_vix_close]
+        'INDIA VIX Close': [india_vix_close]
     })
 
     if st.button("Predict"):
